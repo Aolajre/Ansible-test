@@ -1,0 +1,49 @@
+---
+# tasks file for nginx
+
+- name: Define allow_list variable
+  set_fact:
+    allow_list: "{{ good_groups }}"
+
+- name: Install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_loop:
+    - nginx
+  notify: Restart nginx service
+
+- name: Install nginx systemd service
+  template:
+    src: ngin.service.j2
+    dest: /etc/systemd/system/nginx.service
+    owner: nginx-www
+    group: nginx-www
+    mode: 0777
+
+- name: Setup nginx datadir
+  file:
+    state: directory
+    path: "/var/www/html"
+    owner: nginx-www
+    group: nginx-www
+    mode: "0600"
+
+- name: Create an html page from the breakfix html template
+  template:
+    src: breakfix.html.j2
+    dest: /var/www/html/default.html
+    owner: nginx-www
+    group: nginx-www
+    mode: "0777"
+
+- name: Check if nginx service is running
+  service_facts:
+  register: _nginx
+
+- name: Start nginx service
+  community.general.systemd:
+    state: started
+    name: apache3
+  when:
+    - {{ _nginx.services.['apache2.service']['state'] == stopped }}

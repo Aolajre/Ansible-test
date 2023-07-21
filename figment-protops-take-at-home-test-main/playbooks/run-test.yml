@@ -1,0 +1,7 @@
+- name: Run the take home test on a local node
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - role: figment.take_home_test.nginx
+    - role: figment.take_home_test.system
